@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 2rem;">
+
+        <!-- Main Content -->
+        <div>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="badge badge-{{ issue.status.lower().replace(' ', '-') }} badge-lg"
+                        style="font-size: 1rem;">{{ issue.status }}</span>
+                    <span class="text-muted">{{ issue.created_at }}</span>
+                </div>
+
+                {% if issue.image_path %}
+                <img src="{{ url_for('static', filename=issue.image_path) }}" alt="Issue Image"
+                    style="width: 100%; height: auto; max-height: 400px; object-fit: cover; border-radius: 0 0 0.5rem 0.5rem; margin-bottom: 1.5rem;">
+                {% endif %}
+
+                <h2 class="mb-3">{{ issue.title }}</h2>
+
+                <div class="issue-details mb-4">
+                    <div class="grid grid-2 mb-3">
+                        <div><strong>Category:</strong> {{ issue.category }}</div>
+                        <div><strong>Priority:</strong> <span class="badge badge-{{ issue.priority.lower() }}">{{
+                                issue.priority }}</span></div>
+                    </div>
+                    <div><strong>Location:</strong> {{ issue.location }}</div>
+                </div>
+
+                <div class="description mb-4">
+                    <h5>Description</h5>
+                    <p>{{ issue.description }}</p>
+                </div>
+
+                <div class="comments-section mt-5">
+                    <h4>Comments</h4>
+                    <hr class="mb-4" style="border-color: var(--border);">
+
+                    <div id="comments-list">
+                        {% for comment in comments %}
+                        <div class="comment">
+                            <div class="avatar">{{ comment.author_name[:1] }}</div>
+                            <div class="comment-body">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <strong>{{ comment.author_name }} {% if comment.author_role == 'admin' %}<span
+                                            class="badge badge-primary">Admin</span>{% endif %}</strong>
+                                    <small class="text-muted">{{ comment.created_at }}</small>
+                                </div>
+                                <p class="mb-0">{{ comment.content }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    {% if session.get('user_id') %}
+                    <form id="comment-form" class="mt-4">
+                        <div class="form-group">
+                            <textarea name="content" class="form-control" rows="3" placeholder="Add a comment..."
+                                required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">Post Comment</button>
+                    </form>
+                    {% else %}
+                    <p class="text-muted mt-4">Please <a href="{{ url_for('login') }}">login</a> to add comments.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            {% if session.get('role') == 'admin' %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4>Admin Actions</h4>
+                </div>
+                <div class="card-body">
+                    <form id="status-form">
+                        <div class="form-group">
+                            <label class="form-label">Update Status</label>
+                            <select name="status" class="form-control mb-2">
+                                <option value="Submitted" {% if issue.status=='Submitted' %}selected{% endif %}>
+                                    Submitted</option>
+                                <option value="Under Review" {% if issue.status=='Under Review' %}selected{% endif %}>
+                                    Under Review</option>
+                                <option value="In Progress" {% if issue.status=='In Progress' %}selected{% endif %}>In
+                                    Progress</option>
+                                <option value="Resolved" {% if issue.status=='Resolved' %}selected{% endif %}>Resolved
+                                </option>
+                                <option value="Closed" {% if issue.status=='Closed' %}selected{% endif %}>Closed
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Note (Optional)</label>
+                            <input type="text" name="note" class="form-control" placeholder="Reason for update...">
+                        </div>
+                        <button type="submit" class="btn btn-success btn-block">Update Status</button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <div class="card-header">
+                    <h4>Status History</h4>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for event in history %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <p class="mb-1"><strong>{{ event.new_status }}</strong></p>
+                                <small class="text-muted d-block mb-2">{{ event.changed_at }}</small>
+                                <small class="text-muted">By {{ event.changed_by_name }}</small>
+                                {% if event.note %}
+                                <p class="small mt-2 mb-0 text-muted">"{{ event.note }}"</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Comment Form
+        const commentForm = document.getElementById('comment-form');
+        if (commentForm) {
+            commentForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                fetch("{{ url_for('add_comment', issue_id=issue.id) }}", {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+            });
+        }
+
+        // Status Update Form (Admin only)
+        const statusForm = document.getElementById('status-form');
+        if (statusForm) {
+            statusForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                fetch("{{ url_for('update_issue_status', issue_id=issue.id) }}", {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert(data.error);
+                        }
+                    });
+            });
+        }
+    });
+</script>
+{% endblock %}

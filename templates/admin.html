@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Admin Dashboard</h2>
+
+        <div class="grid grid-3 mb-4">
+            <div class="card text-center p-3">
+                <h3>{{ total_issues }}</h3>
+                <small>Total Issues</small>
+            </div>
+            <div class="card text-center p-3">
+                <h3>{{ total_users }}</h3>
+                <small>Registered Citizens</small>
+            </div>
+            <div class="card text-center p-3">
+                <h3>{{ resolved }}</h3>
+                <small>Issues Resolved</small>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3>Manage Issues</h3>
+                <div class="filter-controls">
+                    <!-- Add filters here if needed -->
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table" style="width: 100%; text-align: left; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <th class="p-2">ID</th>
+                                <th class="p-2">Title</th>
+                                <th class="p-2">Reporter</th>
+                                <th class="p-2">Date</th>
+                                <th class="p-2">Status</th>
+                                <th class="p-2">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for issue in issues %}
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td class="p-2">#{{ issue.id }}</td>
+                                <td class="p-2">{{ issue.title }}</td>
+                                <td class="p-2">{{ issue.reporter_name }}</td>
+                                <td class="p-2">{{ issue.created_at[:10] }}</td>
+                                <td class="p-2">
+                                    <span class="badge badge-{{ issue.status.lower().replace(' ', '-') }}">{{
+                                        issue.status }}</span>
+                                </td>
+                                <td class="p-2">
+                                    <a href="{{ url_for('issue_detail', issue_id=issue.id) }}"
+                                        class="btn btn-outline btn-sm">Manage</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

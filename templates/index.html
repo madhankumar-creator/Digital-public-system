@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+    <div class="container text-center">
+        <h1>Report. Track. Resolve.</h1>
+        <p>A transparent digital platform for citizens to report public issues and track their resolution in real-time.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('report_issue') }}" class="btn btn-primary btn-lg">Report an Issue</a>
+            <a href="{{ url_for('issues_list') }}" class="btn btn-outline btn-lg">View All Issues</a>
+        </div>
+    </div>
+</section>
+
+<section class="stats-section py-5">
+    <div class="container">
+        <div class="grid grid-4 text-center">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_issues }}</div>
+                <div class="stat-label">Total Reports</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ resolved }}</div>
+                <div class="stat-label">Resolved</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ in_progress }}</div>
+                <div class="stat-label">In Progress</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_users }}</div>
+                <div class="stat-label">Active Citizens</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="recent-issues py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Recent Reports</h2>
+            <a href="{{ url_for('issues_list') }}" class="btn btn-link">View All &rarr;</a>
+        </div>
+
+        <div class="grid grid-3">
+            {% for issue in recent_issues %}
+            <div class="card issue-card">
+                <div class="card-body">
+                    <span class="badge badge-{{ issue.status.lower().replace(' ', '-') }} mb-2">{{ issue.status
+                        }}</span>
+                    <h5 class="card-title"><a href="{{ url_for('issue_detail', issue_id=issue.id) }}">{{ issue.title
+                            }}</a></h5>
+                    <p class="text-muted small mb-2"><i class="fas fa-map-marker-alt"></i> {{ issue.location }}</p>
+                    <p class="card-text text-truncate">{{ issue.description[:100] }}...</p>
+                    <div class="issue-meta">
+                        <span>{{ issue.reporter_name }}</span>
+                        <span>{{ issue.created_at[:10] }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

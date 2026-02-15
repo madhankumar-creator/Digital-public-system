@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Browse Issues</h2>
+        <a href="{{ url_for('report_issue') }}" class="btn btn-primary">Report Issue</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4 p-3">
+        <form method="GET" class="grid grid-4 align-items-end"
+            style="grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+            <div class="form-group mb-0">
+                <label class="form-label">Search</label>
+                <input type="text" name="search" class="form-control" value="{{ current_search }}"
+                    placeholder="Keywords...">
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-control">
+                    <option value="">All Categories</option>
+                    {% for cat in ['Roads', 'Water Supply', 'Electricity', 'Sanitation', 'Public Safety', 'Parks',
+                    'Other'] %}
+                    <option value="{{ cat }}" {% if current_category==cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-control">
+                    <option value="">All Statuses</option>
+                    {% for stat in ['Submitted', 'Under Review', 'In Progress', 'Resolved', 'Closed'] %}
+                    <option value="{{ stat }}" {% if current_status==stat %}selected{% endif %}>{{ stat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <button type="submit" class="btn btn-secondary w-100">Filter</button>
+            </div>
+            <div class="form-group mb-0">
+                <a href="{{ url_for('issues_list') }}" class="btn btn-outline w-100">Clear</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Issues Grid -->
+    <div class="grid grid-3">
+        {% for issue in issues %}
+        <div class="card issue-card">
+            {% if issue.image_path %}
+            <img src="{{ url_for('static', filename=issue.image_path) }}" alt="Issue Image"
+                style="width: 100%; height: 200px; object-fit: cover; border-radius: 0.5rem 0.5rem 0 0; margin: -1.5rem -1.5rem 1rem -1.5rem;">
+            {% endif %}
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge badge-{{ issue.status.lower().replace(' ', '-') }}">{{ issue.status }}</span>
+                    <span class="badge badge-{{ issue.priority.lower() }}">{{ issue.priority }}</span>
+                </div>
+                <h5 class="card-title"><a href="{{ url_for('issue_detail', issue_id=issue.id) }}">{{ issue.title }}</a>
+                </h5>
+                <p class="text-muted small mb-2"><i class="fas fa-map-marker-alt"></i> {{ issue.location }}</p>
+                <p class="card-text text-truncate">{{ issue.description[:100] }}...</p>
+                <div class="issue-meta">
+                    <span>{{ issue.reporter_name }}</span>
+                    <span>{{ issue.created_at[:10] }}</span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted">No issues found matching your criteria.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
